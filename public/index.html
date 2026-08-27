@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GeoMart - VES Survey Equipment</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>GeoMart</h1>
+    <p class="tagline">Vertical Electrical Sounding &amp; resistivity survey equipment</p>
+  </header>
+
+  <div id="webmcp-banner" hidden>
+    This browser does not expose <code>document.modelContext</code>. Enable
+    <code>chrome://flags/#enable-webmcp-testing</code> in Chrome, or open this
+    page in ChatGPT's in-app browser, to let an agent use the tools below.
+  </div>
+
+  <main>
+    <section id="site-brief">
+      <h2>Site Brief</h2>
+      <p class="muted">Fills in live as you type. Nothing here is saved until you submit a quote below.</p>
+      <label>Target depth (m) <input id="target-depth" type="number" min="0" /></label>
+      <label>Resistivity min (ohm-m) <input id="resistivity-min" type="number" min="0" /></label>
+      <label>Resistivity max (ohm-m) <input id="resistivity-max" type="number" min="0" /></label>
+      <label>Terrain
+        <select id="terrain">
+          <option value="">-- select --</option>
+          <option value="rocky">Rocky</option>
+          <option value="remote">Remote</option>
+          <option value="mining">Mining</option>
+          <option value="groundwater">Groundwater</option>
+          <option value="urban">Urban</option>
+          <option value="engineering">Engineering</option>
+          <option value="archaeological">Archaeological</option>
+          <option value="frozen">Frozen</option>
+          <option value="paved">Paved</option>
+          <option value="dam-monitoring">Dam monitoring</option>
+        </select>
+      </label>
+      <label>Budget (USD) <input id="budget" type="number" min="0" /></label>
+    </section>
+
+    <section id="comparison-tray">
+      <h2>Comparison Tray</h2>
+      <div id="tray-list"></div>
+    </section>
+
+    <section id="quote-section">
+      <h2>Quote Draft</h2>
+      <div id="quote-draft"></div>
+    </section>
+
+    <section id="catalog">
+      <h2>Catalog</h2>
+      <div id="catalog-list"></div>
+    </section>
+  </main>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

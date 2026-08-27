@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "geomart-webmcp",
+  "compatibility_date": "2026-08-01",
+  "main": "src/worker.ts",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "geomart_db",
+      "database_name": "geomart-db",
+      "database_id": "ac10815d-1417-485d-856f-c36b7f92b23d"
+    }
+  ]
+}

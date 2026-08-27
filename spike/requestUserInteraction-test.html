@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>WebMCP requestUserInteraction spike</title>
+</head>
+<body>
+  <h1>WebMCP requestUserInteraction spike</h1>
+  <p>Requires Chrome with <code>chrome://flags/#enable-webmcp-testing</code> enabled.</p>
+  <p id="status">Checking for document.modelContext...</p>
+  <pre id="log" style="background:#eee;padding:1em;white-space:pre-wrap;"></pre>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const logEl = document.getElementById('log');
+    function log(msg) {
+      logEl.textContent += msg + '\n';
+      console.log(msg);
+    }
+
+    if (!('modelContext' in document)) {
+      statusEl.textContent = 'document.modelContext is NOT available in this browser. Enable chrome://flags/#enable-webmcp-testing and reload.';
+      log('FAIL: document.modelContext undefined');
+    } else {
+      statusEl.textContent = 'document.modelContext found. Registering test tool...';
+      try {
+        document.modelContext.registerTool({
+          name: 'confirm_test_action',
+          description: 'Spike tool to test whether execute() receives a second argument with requestUserInteraction.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              product_id: { type: 'string' }
+            },
+            required: ['product_id']
+          },
+          async execute(input, agent) {
+            log('execute() called with input: ' + JSON.stringify(input));
+            log('second argument (agent) typeof: ' + typeof agent);
+            if (!agent) {
+              log('RESULT: no second argument provided to execute() -- requestUserInteraction path is NOT available this way.');
+              return { confirmed: false, note: 'no agent/client argument present' };
+            }
+            log('agent keys: ' + Object.keys(agent).join(', '));
+            if (typeof agent.requestUserInteraction !== 'function') {
+              log('RESULT: agent.requestUserInteraction is NOT a function. Value: ' + typeof agent.requestUserInteraction);
+              return { confirmed: false, note: 'requestUserInteraction not implemented' };
+            }
+            log('Calling agent.requestUserInteraction() now -- a real confirm() dialog should appear...');
+            try {
+              const confirmed = await agent.requestUserInteraction(async () => {
+                return new Promise((resolve) => {
+                  resolve(confirm('Spike test: confirm product ' + input.product_id + '?'));
+                });
+              });
+              log('RESULT: requestUserInteraction resolved with: ' + confirmed);
+              return { confirmed };
+            } catch (err) {
+              log('RESULT: requestUserInteraction threw: ' + err.message);
+              return { confirmed: false, note: 'threw: ' + err.message };
+            }
+          }
+        });
+        statusEl.textContent = 'Tool "confirm_test_action" registered. Attach an agent (Chrome WebMCP inspector or ChatGPT in-app browser) and invoke it with a product_id.';
+        log('Tool registered successfully.');
+      } catch (err) {
+        statusEl.textContent = 'registerTool() threw an error -- see log.';
+        log('FAIL: registerTool() threw: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>
