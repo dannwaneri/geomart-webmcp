@@ -59,6 +59,19 @@
     </section>
   </main>
 
+  <script>
+    // Plain synchronous script, runs before either script below starts
+    // loading -- guarantees window.onTurnstileReady exists no matter which
+    // of the two finishes loading first, since Turnstile's async script
+    // calls this by name the instant it's ready, and app.js (an ES module,
+    // deferred by spec) can't be relied on to have run yet at that point.
+    window.__turnstileReady = false;
+    window.onTurnstileReady = function () {
+      window.__turnstileReady = true;
+      if (window.__onTurnstileReadyCallback) window.__onTurnstileReadyCallback();
+    };
+  </script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileReady&render=explicit" async defer></script>
   <script type="module" src="/app.js"></script>
 </body>
 </html>

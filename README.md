@@ -39,15 +39,25 @@ Fit-scoring and mismatch-checking (`src/scoring.ts`) are pure functions with no 
 ```bash
 npm install
 npm run build   # bundles src/client/*.ts -> public/app.js
-npm test        # vitest — scoring/mismatch unit tests
+npm test        # vitest, scoring/mismatch unit tests
 npm run dev     # wrangler dev, local D1 + Worker
 ```
 
-Testing the tools themselves requires a WebMCP-capable environment: Chrome with `chrome://flags/#enable-webmcp-testing` enabled, or ChatGPT's in-app browser — no other environment currently discovers `document.modelContext` tools.
+`npm run dev` needs a `.dev.vars` file with `TURNSTILE_SECRET_KEY=<your secret>` (get one via `wrangler turnstile widget create`, or from the Cloudflare dashboard), or the quote-submission endpoint won't verify. `.dev.vars` is gitignored and never committed.
+
+Testing the tools themselves requires a WebMCP-capable environment: Chrome with `chrome://flags/#enable-webmcp-testing` enabled, the ChatGPT desktop app's built-in browser, or Codex/Antigravity with browser access. No other environment currently discovers `document.modelContext` tools.
 
 ## Status
 
-Catalog, storefront, all five tools, and the no-REST-fallback audit are built and verified (unit tests, and DOM-level verification via a temporary registration shim simulating a real agent call). Still open: confirming `agent.requestUserInteraction()` actually fires a dialog in a real Chrome/ChatGPT environment, and the demo video / Devpost writeup.
+Catalog, storefront, all five tools, and the no-REST-fallback audit are built and verified: unit tests, DOM-level checks with a registration shim, and a live pass against a real agent (Codex, via the ChatGPT desktop app's built-in browser) that discovered and called all five tools unaided, including a self-corrected `not_found` recovery and a comparison-tray update that visibly wrote into the live page. `agent.requestUserInteraction()` was confirmed to silently no-op in that runtime, matching Chrome's own documentation that the API isn't implemented yet. The plain Submit-button gate is the mechanism actually carrying the human-in-the-loop requirement, not a hedge.
+
+A second adversarial pass, using Google Antigravity with both source-code and live-site access, found and fixed three real gaps: an XSS in the quote-draft textarea and tray (agent-supplied strings were rendered via unescaped `innerHTML`), a click-forgery hole (script-simulated clicks on the Submit button could not be told apart from real ones, closed with an `isTrusted` check), and, most seriously, a completely unprotected `POST /api/quotes` endpoint: a bare script outside any browser could submit a quote directly with zero human involvement, since `isTrusted` only guards the button's own handler and nothing checked the request's origin. Closed with a same-origin check plus a product-existence check, both re-verified by replaying the exact attack that had succeeded and confirming it now returns 403. That same test also caught an unrelated bug: `schema_quotes.sql` had been written but never applied, so the `quotes` table never existed in either environment until this pass. The actual commit action had been silently broken the whole time, hidden because every prior WebMCP test only exercised the client-side `draft_quote_notes` step.
+
+A retest exposed a real limitation in that fix, not just a theoretical one: `Origin` is a public value, so a script that reads this open-source repo can set it to the correct value itself. Node's `fetch()` has no browser-level restriction against forging that header, so the check only blocks a *missing* or *wrong* Origin, not an informed one. A session-cookie alternative was considered and rejected for the same reason: a script with full HTTP access can fetch the page first to receive the cookie, then replay it on the POST, which requires no special browser capability either.
+
+On a public, unauthenticated API whose source code is required to be open, no purely request-shape check (Origin, a replayable cookie, anything derivable by reading the repo) can prove a submission came from a real human. Closing that gap needed something a script has no way to derive from the public source: Cloudflare Turnstile, verified server-side against Cloudflare's `siteverify` endpoint using a secret that lives only in a `wrangler secret`, never in this repo or the client bundle. `POST /api/quotes` now requires a valid Turnstile token in addition to the Origin and product-existence checks; re-verified in production by replaying the exact bypass that had succeeded (correct Origin, no token, and separately a fake token) and confirming both now return 403.
+
+This limitation was specific to the `POST /api/quotes` commit step throughout and never affected the load-bearing claim for the five WebMCP tools, which stayed REST-inaccessible under the same adversarial pass, full source access included. Still open: the demo video and Devpost writeup.
 
 ## License
 
