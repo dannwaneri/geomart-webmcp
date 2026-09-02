@@ -61,7 +61,7 @@ This limitation was specific to the `POST /api/quotes` commit step throughout an
 
 ## Demo
 
-[Video walkthrough](https://youtu.be/o09h38sn7CE): a human filling in a site brief, Codex calling all five WebMCP tools against the live page, and the human-only submit step.
+[Video walkthrough](https://youtu.be/HKDsfzZTbLs): a human filling in a site brief, Codex calling all five WebMCP tools against the live page, and the human-only submit step.
 
 ## License
 
