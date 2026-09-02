@@ -57,7 +57,11 @@ A retest exposed a real limitation in that fix, not just a theoretical one: `Ori
 
 On a public, unauthenticated API whose source code is required to be open, no purely request-shape check (Origin, a replayable cookie, anything derivable by reading the repo) can prove a submission came from a real human. Closing that gap needed something a script has no way to derive from the public source: Cloudflare Turnstile, verified server-side against Cloudflare's `siteverify` endpoint using a secret that lives only in a `wrangler secret`, never in this repo or the client bundle. `POST /api/quotes` now requires a valid Turnstile token in addition to the Origin and product-existence checks; re-verified in production by replaying the exact bypass that had succeeded (correct Origin, no token, and separately a fake token) and confirming both now return 403.
 
-This limitation was specific to the `POST /api/quotes` commit step throughout and never affected the load-bearing claim for the five WebMCP tools, which stayed REST-inaccessible under the same adversarial pass, full source access included. Still open: the demo video and Devpost writeup.
+This limitation was specific to the `POST /api/quotes` commit step throughout and never affected the load-bearing claim for the five WebMCP tools, which stayed REST-inaccessible under the same adversarial pass, full source access included.
+
+## Demo
+
+[Video walkthrough](https://youtu.be/o09h38sn7CE): a human filling in a site brief, Codex calling all five WebMCP tools against the live page, and the human-only submit step.
 
 ## License
 
